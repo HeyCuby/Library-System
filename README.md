@@ -68,14 +68,13 @@ A typical user session demonstrating the new features:
 ## Class Hierarchy
 
 The project's object-oriented structure is key to its functionality. The `LibraryItem` class is the foundation for all items.
-
-'''sh
+```sh
 LibraryItem
 |
 ├── Book
 ├── DVD
 └── Magazine
-'''
+```
 
 -   **`LibraryItem`**: The parent class. It defines core attributes (`title`, `itemId`, `available`) and methods (`borrow_item`, `return_item`). It also has a base `display_info()` method.
 -   **`Book`**, **`DVD`**, **`Magazine`**: These subclasses inherit from `LibraryItem` and add their own unique attributes. Crucially, each of these classes **overrides** the `display_info()` method to provide a custom, formatted string of its specific details. This allows the "View Details" feature to show relevant information for each item type.
