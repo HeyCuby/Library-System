@@ -226,23 +226,19 @@ class LibrarySystem:
         else:
             print(Fore.RED + "Error: Item ID not found.")
             
-    def search_item(self, query: str):
-        """Searches for items by title or ID and displays the results."""
-        if not query: # Handle empty search query
-            print(Fore.YELLOW + "Search query cannot be empty.")
-            return
+    def search_item(self, query: str) -> list:
+        """
+        Searches for items by title or ID and returns a list of results.
+        Returns an empty list if no items are found or the query is empty.
+        """
+        if not query:
+            return [] # Return empty list if query is empty
         query = query.lower()
         results = [
             item for item in self._items 
             if query in item.title.lower() or query in item.itemId.lower()
         ]
-        clear_screen()
-        print("\n--- Search Results ---")
-        if not results:
-            print("No items found matching your query.")
-        else:
-            self._display_item_list(results)
-        print("--------------------")
+        return results
 
     def _display_item_list(self, item_list: list):
         """
@@ -361,7 +357,33 @@ def get_validated_input(prompt: str, validation_type: type):
                 print(Fore.RED + "Invalid date format. Please use YYYY-MM-DD.")
         else: # Default to string
             return user_input
-        # If the input is not a valid integer or date, it will prompt the user again
+
+def view_details_flow(results: list[LibraryItem]):
+    """
+    Handles the UI flow for viewing details of items from a search result.
+    """
+    if not results:
+        clear_screen()
+        print("\n--- Search Results ---")
+        print("No items found matching your query.")
+        return
+
+    while True:
+        # The selection_menu will display the list of items
+        item_to_view = selection_menu("Select an item to view details:", results)
+
+        if not item_to_view:
+            # User pressed 'q' to cancel and return to the main menu
+            break
+
+        # If an item was selected, display its details
+        clear_screen()
+        print(f"--- Details for '{item_to_view.title}' ---")
+        # This method is defined in the imported LibraryItem class
+        item_to_view.display_info()
+        print("-" * (len(item_to_view.title) + 20))
+        input("\nPress Enter to return to the search results...")
+        # After pressing enter, the loop will continue, showing the results menu again
 
 def add_item_flow(library: LibrarySystem):
     """Allows for adding new items to the library."""
@@ -465,7 +487,9 @@ def main():
                 case 5:
                     clear_screen()
                     query = input("Enter title or Item ID to search for: ").strip()
-                    library.search_item(query)
+                    search_results = library.search_item(query)
+                    # The new flow handles displaying results and the details menu
+                    view_details_flow(search_results)
                 case 6: # Add a New Item
                     add_item_flow(library)
                 case 7: # Exit
