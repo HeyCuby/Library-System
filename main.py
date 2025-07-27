@@ -318,6 +318,7 @@ def selection_menu(prompt: str, options: list):
         elif key in ('\x1b[B', 's', 'S'):
             selected_index = (selected_index + 1) % len(options)
         elif key in ('q', 'Q'):
+            clear_screen()
             return None
         elif key in ('\r', ' '):
             return options[selected_index]
@@ -374,6 +375,7 @@ def view_details_flow(results: list[LibraryItem]):
 
         if not item_to_view:
             # User pressed 'q' to cancel and return to the main menu
+            print("Search cancelled.")
             break
 
         # If an item was selected, display its details
