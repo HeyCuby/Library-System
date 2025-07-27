@@ -70,7 +70,7 @@ def get_key():
             termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
         return ch
 
-#  Library System Management:
+#  Library System Management:
 
 class LibrarySystem:
     """
@@ -91,31 +91,42 @@ class LibrarySystem:
         """
         Loads the library items from the JSON data file.
         If the file doesn't exist, it does nothing, leaving the library empty.
+        Includes checks for duplicate IDs.
         """
         try:
             with open(self.data_file_path, 'r') as f:
-                # Open the file in read mode
                 items_data = json.load(f)
-                # Load the list of item dictionaries from the JSON file
+                loaded_ids = set() # Keep track of IDs we've already loaded
                 for data in items_data:
-                    item_type = data.pop('type')
-                    # Iterate through each dictionary in the loaded list and gets the item's type ("Book", "DVD")
-                    if item_type == 'Book':
-                        self._items.append(Book(**data))
-                        # The '**' unpacks the dictionary for automatic assignement of parameters
-                    elif item_type == 'Magazine':
-                        data['publicationDate'] = date.fromisoformat(data['publicationDate'])
-                        self._items.append(Magazine(**data))
-                        # Converting date from string back to date format
-                        # The '**' unpacks the dictionary for automatic assignement of parameters
-                    elif item_type == 'DVD':
-                        self._items.append(DVD(**data))
-                        # The '**' unpacks the dictionary for automatic assignement of parameters
+                    item_id = data.get('itemId')
+                    if item_id in loaded_ids:
+                        print(Fore.RED + f"Warning: Duplicate itemId '{item_id}' found in data file. Skipping.")
+                        continue # Skip this duplicate item
+
+                    item_type = data.pop('type', None)
+                    if not item_type:
+                        print(Fore.RED + "Warning: Item data is missing 'type'. Skipping.")
+                        continue
+
+                    try:
+                        if item_type == 'Book':
+                            self._items.append(Book(**data))
+                        elif item_type == 'Magazine':
+                            data['publicationDate'] = date.fromisoformat(data['publicationDate'])
+                            self._items.append(Magazine(**data))
+                        elif item_type == 'DVD':
+                            self._items.append(DVD(**data))
+                        else:
+                            print(Fore.YELLOW + f"Warning: Unknown item type '{item_type}' found. Skipping.")
+                            continue
+                        
+                        loaded_ids.add(item_id) # Add the new ID to our set
+                    except (TypeError, KeyError) as e:
+                        print(Fore.RED + f"Error creating item from data: {data}. Missing or incorrect key: {e}. Skipping.")
+
         except FileNotFoundError:
-            # If the file does not exist, the library will start empty, and the file will be created on the first save
             print(Fore.YELLOW + "Data file not found. Starting with an empty library.")
         except (json.JSONDecodeError, KeyError) as e:
-            # Handle cases where the file is corrupted or has incorrect data
             print(Fore.RED + f"Error reading data file: {e}. Starting with an empty library.")
 
     def _save_data(self):
@@ -124,41 +135,51 @@ class LibrarySystem:
         This method is called anytime an item is borrowed or returned.
         """
         serializable_items = []
-        # A list to hold dictionaries that are safe to serialize into JSON
         for item in self._items:
             item_data = item.__dict__.copy()
             item_data['type'] = type(item).__name__
-            # Copy the object's dictionary and add a 'type' key to save object type for next load
 
             if isinstance(item, Magazine):
                 item_data['publicationDate'] = item_data['publicationDate'].isoformat()
-                # If the object is a Magazine, convert the date to ISO format string (YYYY-MM-DD) which is a standard, JSON-compatible format
             serializable_items.append(item_data)
         
-        # Open the data file in ('w')rite mode , which overwrites the existing contents
         with open(self.data_file_path, 'w') as f:
-            # Use json.dump to write the list of dictionaries to the file
-            # indent=4 makes the JSON file readable for users
             json.dump(serializable_items, f, indent=4)
+
+    def add_item(self, item: LibraryItem):
+        """
+        Adds a new item to the library, checking for duplicate IDs first.
+        """
+        if self._find_item_by_id(item.itemId):
+            print(Fore.RED + f"Error: An item with ID '{item.itemId}' already exists.")
+            return False
+        
+        self._items.append(item)
+        self._save_data()
+        print(Fore.GREEN + f"Successfully added '{item.title}' to the library.")
+        return True
 
     def populate_with_initial_data(self):
         """Adds the default set of items to the library and saves it. Can also be referred to as 'canned demo'"""
         print("Populating library with initial items for the first time...")
-        # Add a variety of items to the library for demonstration
-        self._items.append(Book("The Hobbit", "J.R.R. Tolkien", "B001", 310, "Fantasy"))
-        self._items.append(Book("1984", "George Orwell", "B002", 328, "Dystopian"))
-        self._items.append(Book("Dune", "Frank Herbert", "B003", 412, "Science Fiction"))
-        self._items.append(Book("Foundation", "Isaac Asimov", "B004", 255, "Science Fiction"))
-        self._items.append(Book("Brave New World", "Aldous Huxley", "B005", 311, "Dystopian"))
-        self._items.append(DVD("The Matrix", "Wachowskis", 136, "D001"))
-        self._items.append(DVD("Inception", "Christopher Nolan", 148, "D002"))
-        self._items.append(DVD("The Lord of the Rings", "Peter Jackson", 201, "D003"))
-        self._items.append(Magazine("National Geographic", 230, date(2023, 10, 1), "M001"))
-        self._items.append(Magazine("Scientific American", 1089, date(2024, 1, 1), "M002"))
-        self._items.append(Magazine("Time", 5221, date(2023, 12, 25), "M003"))
+        # A list of items to add. We use the add_item method to ensure no duplicates.
+        initial_items = [
+            Book("The Hobbit", "J.R.R. Tolkien", "B001", 310, "Fantasy"),
+            Book("1984", "George Orwell", "B002", 328, "Dystopian"),
+            Book("Dune", "Frank Herbert", "B003", 412, "Science Fiction"),
+            Book("Foundation", "Isaac Asimov", "B004", 255, "Science Fiction"),
+            Book("Brave New World", "Aldous Huxley", "B005", 311, "Dystopian"),
+            DVD("The Matrix", "Wachowskis", 136, "D001"),
+            DVD("Inception", "Christopher Nolan", 148, "D002"),
+            DVD("The Lord of the Rings", "Peter Jackson", 201, "D003"),
+            Magazine("National Geographic", 230, date(2023, 10, 1), "M001"),
+            Magazine("Scientific American", 1089, date(2024, 1, 1), "M002"),
+            Magazine("Time", 5221, date(2023, 12, 25), "M003")
+        ]
+        for item in initial_items:
+            self._items.append(item) # Directly append here as we know they are unique
         
         print("\nDemonstrating a pre-borrowed item...")
-        # Pre-borrow some items to show how borrowed lists work from the start
         item1 = self._find_item_by_id("B002")
         if item1:
             item1.borrow_item()
@@ -169,7 +190,6 @@ class LibrarySystem:
         
         self._save_data()
         print(Fore.GREEN + "Initial library data has been created and saved.")
-        # Save this initial state to the data file.
 
     def _find_item_by_id(self, item_id: str) -> LibraryItem | None:
         """A private helper method to find an item by its unique ID. Returns None if no items matches search ID"""
@@ -190,9 +210,7 @@ class LibrarySystem:
         """Handles the process of borrowing an item and saves the new state."""
         item = self._find_item_by_id(item_id)
         if item:
-            # If item is found
             if item.borrow_item():
-                # If borrowing was successful, save the changes to the file
                 self._save_data()
                 return True
         else:
@@ -205,25 +223,25 @@ class LibrarySystem:
         if item:
             item.return_item()
             self._save_data()
-            # If item is found, return item and save file
         else:
             print(Fore.RED + "Error: Item ID not found.")
             
     def search_item(self, query: str):
         """Searches for items by title or ID and displays the results."""
-        query = query.lower() # Convert query to lowercase for case insensitive search
+        if not query: # Handle empty search query
+            print(Fore.YELLOW + "Search query cannot be empty.")
+            return
+        query = query.lower()
         results = [
             item for item in self._items 
             if query in item.title.lower() or query in item.itemId.lower()
         ]
-        # Create a list of items where the query is found in the title or itemId
         clear_screen()
         print("\n--- Search Results ---")
         if not results:
             print("No items found matching your query.")
         else:
             self._display_item_list(results)
-            # Use the dedicated display method to show the results
         print("--------------------")
 
     def _display_item_list(self, item_list: list):
@@ -237,13 +255,11 @@ class LibrarySystem:
         last_index = len(item_list) - 1
         for i, item in enumerate(item_list):
             prefix = "└── " if i == last_index else "├── "
-            # The prefix creates the "tree" look. '└──' for the last item, '├──' for others
             if item.is_available():
                 status_display = f"[{Fore.GREEN}✓{Style.RESET_ALL}]" 
             else:
                 status_display = f"[{Fore.RED}✕{Style.RESET_ALL}]"
-            # Set the status symbol and color based on availability
-            item_type = type(item).__name__ # Get the class name (e.g., "Book")
+            item_type = type(item).__name__
             item_details = f"'{item.title}' (ID: {item.itemId})"
             print(f"{prefix}{status_display} {item_type}: {item_details}")
 
@@ -268,12 +284,12 @@ class LibrarySystem:
         self._display_item_list(self.get_borrowed_items())
         print("----------------------")
 
-#  UI Functions:
+#  UI Functions:
 
-def selection_menu(prompt: str, options: list[LibraryItem]):
+def selection_menu(prompt: str, options: list):
     """
-    Creates a reusable, interactive menu for selecting a library item from a list.
-    Returns the selected item object, or None if the user cancels by pressing 'q'.
+    Creates a reusable, interactive menu for selecting an option from a list.
+    Returns the selected item, or None if the user cancels.
     """
     if not options:
         clear_screen()
@@ -286,30 +302,28 @@ def selection_menu(prompt: str, options: list[LibraryItem]):
         clear_screen()
         print(f"\n{prompt} (Press 'q' to cancel)")
         print("-" * (len(prompt) + 20))
-        # Prints a horizontal line the length of the prompt
         for i, item in enumerate(options):
-            display_text = f"{type(item).__name__}: '{item.title}' (ID: {item.itemId})"
-            # Saves the object's type, title, and ID for displaying
+            # Check if the item is a LibraryItem or just a string for generic menus
+            if isinstance(item, LibraryItem):
+                display_text = f"{type(item).__name__}: '{item.title}' (ID: {item.itemId})"
+            else:
+                display_text = str(item)
+
             if i == selected_index:
                 print(f"> {Back.WHITE}{Fore.BLACK} {display_text} {Style.RESET_ALL}")
-                # Highlight the currently selected item
             else:
                 print(f"  {display_text}")
         print("-" * (len(prompt) + 20))
         print("Use W/S or Arrow Keys to navigate, Enter to select.")
 
         key = get_key()
-        # Wait for a single key press
-
-        # Update the selected_index based on user input.
-        if key in ('\x1b[A', 'w', 'W'): # Up arrow or W
-            # The modulo operator (%) ensures the selection wraps around correctly
+        if key in ('\x1b[A', 'w', 'W'):
             selected_index = (selected_index - 1) % len(options)
-        elif key in ('\x1b[B', 's', 'S'): # Down arrow or S
+        elif key in ('\x1b[B', 's', 'S'):
             selected_index = (selected_index + 1) % len(options)
-        elif key in ('q', 'Q'): # Quit option
+        elif key in ('q', 'Q'):
             return None
-        elif key in ('\r', ' '): # Enter or Space key confirms selection
+        elif key in ('\r', ' '):
             return options[selected_index]
 
 def display_main_menu(options: list, selected_index: int):
@@ -319,32 +333,87 @@ def display_main_menu(options: list, selected_index: int):
     for i, option in enumerate(options):
         if i == selected_index:
             print(f"> {Back.WHITE}{Fore.BLACK} {option} {Style.RESET_ALL}")
-            # Highlight the selected option with a background color
         else:
             print(f"  {option}")
     print("========================")
     print("Use W/S or Arrow Keys to navigate, Enter to select.")
 
+def get_validated_input(prompt: str, validation_type: type):
+    """
+    A robust function to get and validate user input.
+    It loops until a valid input of the specified type is given.
+    """
+    while True:
+        user_input = input(prompt).strip()
+        if not user_input:
+            print(Fore.RED + "Input cannot be empty. Please try again.")
+            continue
+
+        if validation_type == int:
+            try:
+                return int(user_input)
+            except ValueError:
+                print(Fore.RED + "Invalid input. Please enter a whole number.")
+        elif validation_type == date:
+            try:
+                return date.fromisoformat(user_input)
+            except ValueError:
+                print(Fore.RED + "Invalid date format. Please use YYYY-MM-DD.")
+        else: # Default to string
+            return user_input
+
+def add_item_flow(library: LibrarySystem):
+    """Handles the user flow for adding a new item to the library."""
+    clear_screen()
+    item_type_options = ["Book", "DVD", "Magazine"]
+    item_type = selection_menu("Select the type of item to add:", item_type_options)
+
+    if not item_type:
+        print("Add item cancelled.")
+        return
+
+    clear_screen()
+    print(f"--- Adding a new {item_type} ---")
+    
+    # Common attributes
+    title = get_validated_input("Enter Title: ", str)
+    itemId = get_validated_input("Enter unique Item ID: ", str)
+    
+    # Check for duplicate ID immediately
+    if library._find_item_by_id(itemId):
+        print(Fore.RED + f"Error: An item with ID '{itemId}' already exists.")
+        return
+
+    if item_type == "Book":
+        author = get_validated_input("Enter Author: ", str)
+        numPages = get_validated_input("Enter Number of Pages: ", int)
+        genre = get_validated_input("Enter Genre: ", str)
+        new_item = Book(title, author, itemId, numPages, genre)
+    elif item_type == "DVD":
+        director = get_validated_input("Enter Director: ", str)
+        duration = get_validated_input("Enter Duration (minutes): ", int)
+        new_item = DVD(title, director, duration, itemId)
+    elif item_type == "Magazine":
+        issueNumber = get_validated_input("Enter Issue Number: ", int)
+        publicationDate = get_validated_input("Enter Publication Date (YYYY-MM-DD): ", date)
+        new_item = Magazine(title, issueNumber, publicationDate, itemId)
+    
+    library.add_item(new_item)
 
 
-#  Main:
+#  Main:
 
 def main():
     """The main function that runs the entire command-line application."""
     DATA_FILE = "library_data.json"
-    # Define the name for our data file.
-
     library = LibrarySystem(DATA_FILE)
-    # Create an instance of the library system, which will automatically try to load data from the provided file
     clear_screen()
     
-    # Check if the library is empty after trying to load. If so, it's the first run
     if not library._items:
         library.populate_with_initial_data()
         print("-" * 30)
         input("Press Enter to start...")
 
-    # Define the menu options and the initial selected position
     menu_options = [
         "List All Items",
         "List Available Items",
@@ -352,61 +421,57 @@ def main():
         "Borrow an Item",
         "Return an Item",
         "Search for an Item",
+        "Add a New Item", # New option
         "Exit"
     ]
     selected_option = 0
-    # Sets the selection option to first (top) option
 
     while True:
         display_main_menu(menu_options, selected_option)
         key = get_key()
-        # Display the menu and wait for the user to navigate or select
 
-        # Update menu navigation based on key press
-        if key in ('\x1b[A', 'w', 'W'): # Up
+        if key in ('\x1b[A', 'w', 'W'):
             selected_option = (selected_option - 1) % len(menu_options)
-        elif key in ('\x1b[B', 's', 'S'): # Down
+        elif key in ('\x1b[B', 's', 'S'):
             selected_option = (selected_option + 1) % len(menu_options)
-        elif key in ('\r', ' '): # Select (Enter or Space)
+        elif key in ('\r', ' '):
             choice = selected_option
 
-            # Execute the corresponding action based on the user's choice
             match choice:
-                case 0: # List all items
+                case 0:
                     library.list_all_items()
-                case 1: # List available items
+                case 1:
                     library.list_available_items()
-                case 2: # List borrowed items
+                case 2:
                     library.list_borrowed_items()
-                case 3: # Borrow an item
+                case 3:
                     available_items = library.get_available_items()
                     item_to_borrow = selection_menu("Select an item to borrow:", available_items)
                     if item_to_borrow:
-                        # If the user didnt cancel
                         library.borrow_item(item_to_borrow.itemId)
                     else:
                         clear_screen()
                         print("Borrowing cancelled.")
-                case 4: # Return an Item
+                case 4:
                     borrowed_items = library.get_borrowed_items()
                     item_to_return = selection_menu("Select an item to return:", borrowed_items)
                     if item_to_return:
-                        # If the user didnt cancel
                         library.return_item(item_to_return.itemId)
                     else:
                         clear_screen()
                         print("Return cancelled.")
-                case 5: # Search for an item
+                case 5:
                     clear_screen()
                     query = input("Enter title or Item ID to search for: ").strip()
                     library.search_item(query)
-                case 6: # Exit
+                case 6: # Add a New Item
+                    add_item_flow(library)
+                case 7: # Exit
                     clear_screen()
                     print("Thank you for using the Library System. Goodbye!")
-                    break # Break out of the while loop to end the program
+                    break
             input("\nPress Enter to return to the menu...")
-            # Pause the screen until the user is ready to return to the menu
 
-# This standard Python construct ensures that the main() function is called only when the script is executed directly (not when it's imported as a module)
 if __name__ == "__main__":
     main()
+# This line ensures that the main function is called when the script is run directly
