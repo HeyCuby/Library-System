@@ -32,8 +32,8 @@ The application features a fully interactive, menu-driven interface that does no
 1.  **Ensure Python 3.6+ is installed** on your system and accessible from the command line.
 2.  **Clone the repository or download all `.py` files** into a single project directory.
     ```sh
-    git clone <your-repository-url>
-    cd <project-directory>
+    git clone https://github.com/HeyCuby/Library-System.git
+    cd Library-System
     ```
 3.  **Install the required external library** using the Python package installer, `pip`.
     ```sh
