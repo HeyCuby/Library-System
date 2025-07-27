@@ -348,7 +348,7 @@ def get_validated_input(prompt: str, validation_type: type):
         if not user_input:
             print(Fore.RED + "Input cannot be empty. Please try again.")
             continue
-
+        # Repeat until user provides a non-empty input
         if validation_type == int:
             try:
                 return int(user_input)
@@ -361,28 +361,31 @@ def get_validated_input(prompt: str, validation_type: type):
                 print(Fore.RED + "Invalid date format. Please use YYYY-MM-DD.")
         else: # Default to string
             return user_input
+        # If the input is not a valid integer or date, it will prompt the user again
 
 def add_item_flow(library: LibrarySystem):
-    """Handles the user flow for adding a new item to the library."""
+    """Allows for adding new items to the library."""
     clear_screen()
     item_type_options = ["Book", "DVD", "Magazine"]
     item_type = selection_menu("Select the type of item to add:", item_type_options)
+    # Use selection_menu to let the user choose the type of item they want to add
 
     if not item_type:
         print("Add item cancelled.")
         return
+    # If the user cancels, exit the function
 
     clear_screen()
     print(f"--- Adding a new {item_type} ---")
     
-    # Common attributes
     title = get_validated_input("Enter Title: ", str)
     itemId = get_validated_input("Enter unique Item ID: ", str)
+    # Common attributes
     
-    # Check for duplicate ID immediately
     if library._find_item_by_id(itemId):
         print(Fore.RED + f"Error: An item with ID '{itemId}' already exists.")
         return
+    # Check for duplicate ID
 
     if item_type == "Book":
         author = get_validated_input("Enter Author: ", str)
@@ -397,9 +400,8 @@ def add_item_flow(library: LibrarySystem):
         issueNumber = get_validated_input("Enter Issue Number: ", int)
         publicationDate = get_validated_input("Enter Publication Date (YYYY-MM-DD): ", date)
         new_item = Magazine(title, issueNumber, publicationDate, itemId)
-    
+        # Adding specific attributes
     library.add_item(new_item)
-
 
 #  Main:
 
