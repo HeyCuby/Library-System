@@ -11,7 +11,7 @@ The application features a fully interactive, menu-driven interface that does no
 ### System & User Interface
 - **Fully Interactive Menu:** Navigate the system using `W/S` or `Up`/`Down` arrow keys. Selections are made with `Enter` or `Space`. This modern CLI approach provides a smooth user experience.
 - **Cross-Platform Compatibility:** The system intelligently detects the operating system to provide single-key input detection on **Windows** (`msvcrt`), **macOS**, and **Linux** (`tty`, `termios`).
-- **Colored Terminal Output:** Utilizes the `colorama` library to provide clear, color-coded feedback. Available items are marked with a green check (`✓`), unavailable items with a red cross (`✕`), and success/error messages are colored for readability.
+- **coloured Terminal Output:** Utilizes the `colourama` library to provide clear, colour-coded feedback. Available items are marked with a green check (`✓`), unavailable items with a red cross (`✕`), and success/error messages are coloured for readability.
 - **Robust Data Handling:**
     - On startup, the system loads all data from `library_data.json`.
     - It now includes **error checking** for corrupted data, including handling of duplicate Item IDs to prevent crashes.
@@ -37,7 +37,7 @@ The application features a fully interactive, menu-driven interface that does no
     ```
 3.  **Install the required external library** using the Python package installer, `pip`.
     ```sh
-    pip install colorama
+    pip install colourama
     ```
 
 ## How to Run the Program
@@ -100,8 +100,8 @@ Several key design decisions were made to ensure the program is robust, user-fri
 -   `tty` & `termios`: (Unix-like only) Used for raw terminal access to capture single key presses.
 
 ### External Modules (install with pip):
--   `colorama`: Used for adding colored text output to the terminal.
+-   `colourama`: Used for adding coloured text output to the terminal.
 
 To install the necessary external dependency:
 ```sh
-pip install colorama
+pip install colourama
