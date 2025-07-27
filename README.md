@@ -15,7 +15,7 @@ The application features a fully interactive, menu-driven interface that does no
 - **Robust Data Handling:**
     - On startup, the system loads all data from `library_data.json`.
     - It now includes **error checking** for corrupted data, including handling of duplicate Item IDs to prevent crashes.
-- **First-Run Setup:** If no `library_data.json` file is found, the application automatically populates itself with a "canned demo"—a predefined set of items—to showcase its features immediately.
+- **First-Run Setup:** If no `library_data.json` file is found, the application automatically populates itself with a "canned demo" - a predefined set of items - to showcase its features immediately.
 
 ### Item & Library Management
 - **Add New Items:** A guided, step-by-step process allows users to add new Books, DVDs, or Magazines to the library. The system includes **input validation** to ensure data like numbers and dates are entered correctly.
