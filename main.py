@@ -159,22 +159,25 @@ class LibrarySystem:
         print(Fore.GREEN + f"Successfully added '{item.title}' to the library.")
         return True
 
-    def populate_with_initial_data(self):
+    def canned_demonstration(self):
         """Adds the default set of items to the library and saves it. Can also be referred to as 'canned demo'"""
         print("Populating library with initial items for the first time...")
         # A list of items to add. We use the add_item method to ensure no duplicates.
         initial_items = [
-            Book("The Hobbit", "J.R.R. Tolkien", "B001", 310, "Fantasy"),
-            Book("1984", "George Orwell", "B002", 328, "Dystopian"),
-            Book("Dune", "Frank Herbert", "B003", 412, "Science Fiction"),
-            Book("Foundation", "Isaac Asimov", "B004", 255, "Science Fiction"),
+            Book("Catch-22", "Joseph Heller", "B001", 310, "Fiction"),
+            Book("Harry Potter and the Philosopher's Stone", "J.K. Rowling", "B002", 328, "Fantasy"),
+            Book("The Da Vinci Code", "Dan Brown", "B003", 412, "Mystery"),
+            Book("The Great Gatsby", "F. Scott Fitzgerald", "B004", 255, "Classic"),
             Book("Brave New World", "Aldous Huxley", "B005", 311, "Dystopian"),
             DVD("The Matrix", "Wachowskis", 136, "D001"),
-            DVD("Inception", "Christopher Nolan", 148, "D002"),
+            DVD("Cars", "John Lasseter", 148, "D002"),
             DVD("The Lord of the Rings", "Peter Jackson", 201, "D003"),
-            Magazine("National Geographic", 230, date(2023, 10, 1), "M001"),
-            Magazine("Scientific American", 1089, date(2024, 1, 1), "M002"),
-            Magazine("Time", 5221, date(2023, 12, 25), "M003")
+            DVD("Pacific Rim", "Guillermo del Toro", 131, "D004"),
+            Magazine("Forbes", 1234, date(2023, 11, 15), "M000"),
+            Magazine("Vogue", 5678, date(2023, 9, 1), "M001"),
+            Magazine("Wired", 9101, date(2023, 8, 1), "M002"),
+            Magazine("National Geographic", 230, date(2023, 10, 1), "M003"),
+            Magazine("Sydney Morning Herald", 1089, date(2024, 1, 1), "M004"),
         ]
         for item in initial_items:
             self._items.append(item) # Directly append here as we know they are unique
@@ -359,7 +362,7 @@ def get_validated_input(prompt: str, validation_type: type):
         else: # Default to string
             return user_input
 
-def view_details_flow(results: list[LibraryItem]):
+def view_details(results: list[LibraryItem]):
     """
     Handles the UI flow for viewing details of items from a search result.
     """
@@ -387,7 +390,7 @@ def view_details_flow(results: list[LibraryItem]):
         input("\nPress Enter to return to the search results...")
         # After pressing enter, the loop will continue, showing the results menu again
 
-def add_item_flow(library: LibrarySystem):
+def add_item(library: LibrarySystem):
     """Allows for adding new items to the library."""
     clear_screen()
     item_type_options = ["Book", "DVD", "Magazine"]
@@ -436,18 +439,18 @@ def main():
     clear_screen()
     
     if not library._items:
-        library.populate_with_initial_data()
+        library.canned_demonstration()
         print("-" * 30)
         input("Press Enter to start...")
 
     menu_options = [
+        "Add a New Item",
         "List All Items",
         "List Available Items",
         "List Borrowed Items",
         "Borrow an Item",
         "Return an Item",
         "Search for an Item",
-        "Add a New Item", # New option
         "Exit"
     ]
     selected_option = 0
@@ -464,13 +467,15 @@ def main():
             choice = selected_option
 
             match choice:
-                case 0:
-                    library.list_all_items()
+                case 0: # Add a New Item
+                    add_item(library)
                 case 1:
-                    library.list_available_items()
+                    library.list_all_items()
                 case 2:
-                    library.list_borrowed_items()
+                    library.list_available_items()
                 case 3:
+                    library.list_borrowed_items()
+                case 4:
                     available_items = library.get_available_items()
                     item_to_borrow = selection_menu("Select an item to borrow:", available_items)
                     if item_to_borrow:
@@ -478,7 +483,7 @@ def main():
                     else:
                         clear_screen()
                         print("Borrowing cancelled.")
-                case 4:
+                case 5:
                     borrowed_items = library.get_borrowed_items()
                     item_to_return = selection_menu("Select an item to return:", borrowed_items)
                     if item_to_return:
@@ -486,14 +491,12 @@ def main():
                     else:
                         clear_screen()
                         print("Return cancelled.")
-                case 5:
+                case 6:
                     clear_screen()
                     query = input("Enter title or Item ID to search for: ").strip()
                     search_results = library.search_item(query)
                     # The new flow handles displaying results and the details menu
-                    view_details_flow(search_results)
-                case 6: # Add a New Item
-                    add_item_flow(library)
+                    view_details(search_results)
                 case 7: # Exit
                     clear_screen()
                     print("Thank you for using the Library System. Goodbye!")
