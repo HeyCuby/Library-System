@@ -38,7 +38,7 @@ The application features a fully interactive, menu-driven interface that does no
     ```
 3. **Install the required external library**:
     ```sh
-    pip install colourama
+    pip install colorama
     ```
 
 ---
