@@ -33,12 +33,12 @@ The application features a fully interactive, menu-driven interface that does no
 1. **Ensure Python 3.6+ is installed** on your system.
 2. **Clone the repository or download all `.py` files** into a single directory:
     ```sh
-    git clone <your-repository-url>
-    cd <project-directory>
+    git clone https://github.com/HeyCuby/Library-System.git
+    cd Library-System
     ```
 3. **Install the required external library**:
     ```sh
-    pip install colorama
+    pip install colourama
     ```
 
 ---
@@ -76,6 +76,7 @@ LibraryItem
 ├── Book
 ├── DVD
 └── Magazine
+```
 ```
 
 - **LibraryItem:** Base class with common attributes (`title`, `author`, `itemId`, `available`) and methods (`borrow_item`, `return_item`, `is_available`, `display_info`).
