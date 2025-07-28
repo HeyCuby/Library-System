@@ -16,7 +16,7 @@ The application features a fully interactive, menu-driven interface that does no
 - **Cross-Platform Compatibility:** Single-key input detection works on Windows (`msvcrt`), macOS, and Linux (`tty`, `termios`).
 - **Coloured Terminal Output:** Uses the `colorama` library for colour-coded feedback. Available items show a green check (`✓`), unavailable items a red cross (`✕`), and messages are colour-coded.
 - **Robust Data Handling:** Loads all data from `library_data.json` at startup, with error checking for corrupted data and duplicate Item IDs.
-- **First-Run Setup:** If no data file is found, the system auto-populates with a "canned demo"—a predefined set of items—to showcase features.
+- **First-Run Setup:** If no data file is found, the system auto-populates with a "canned demo"-a predefined set of items-to showcase features.
 
 ### Item & Library Management
 
